@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>ML CSV Upload</title>
+</head>
+<body>
+  <h1>Upload CSV for ML Prediction</h1>
+
+  <form id="upload-form" enctype="multipart/form-data">
+    <input type="file" name="file" required><br><br>
+    <button type="submit">Predict</button>
+  </form>
+
+  <h3 id="result"></h3>
+  <pre id="code-block" style="background:#f0f0f0; padding:10px;"></pre>
+
+  <script>
+    document.getElementById("upload-form").onsubmit = async function (e) {
+      e.preventDefault();
+      const formData = new FormData(this);
+
+      const res = await fetch("/predict", {
+        method: "POST",
+        body: formData
+      });
+
+      const data = await res.json();
+      if (data.error) {
+        document.getElementById("result").innerText = "❌ Error: " + data.error;
+      } else {
+        document.getElementById("result").innerText = "✅ Accuracy: " + data.accuracy + "%";
+        document.getElementById("code-block").innerText = data.code;
+      }
+    }
+  </script>
+</body>
+</html>
