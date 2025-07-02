@@ -7,13 +7,18 @@ from sklearn.preprocessing import LabelEncoder
 import json
 import os
 
-# ✅ Serve React frontend build folder
-app = Flask(__name__, static_folder='build', static_url_path='')
+# ✅ Setup Flask app to serve React build
+app = Flask(__name__, static_folder=os.path.join(os.path.dirname(__file__), '../client/build'), static_url_path='/')
 CORS(app)
 
-@app.route('/')
-def serve():
-    return send_from_directory(app.static_folder, 'index.html')
+# ✅ Serve React index.html
+@app.route('/', defaults={'path': ''})
+@app.route('/<path:path>')
+def serve_react(path):
+    if path != "" and os.path.exists(os.path.join(app.static_folder, path)):
+        return send_from_directory(app.static_folder, path)
+    else:
+        return send_from_directory(app.static_folder, 'index.html')
 
 # ✅ ML Prediction Endpoint
 @app.route('/predict', methods=['POST'])
@@ -84,8 +89,8 @@ def chat():
         data = request.get_json(force=True)
         question = data.get("question", "").lower()
 
-        # ✅ Safe path to responses.json (works in deployment too)
-        responses_path = os.path.join(os.path.dirname(__file__), 'responses.json')
+        # Load responses.json reliably
+        responses_path = os.path.join(os.path.dirname(__file__), '../responses.json')
         with open(responses_path, "r") as f:
             responses = json.load(f)
 
@@ -99,6 +104,6 @@ def chat():
         print("Chat Error:", e)
         return jsonify({"answer": "Oops! Something went wrong with the chatbot."})
 
-# ✅ Run Server
+# ✅ Run server
 if __name__ == '__main__':
     app.run(debug=True)
