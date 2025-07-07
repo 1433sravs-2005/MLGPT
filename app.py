@@ -10,6 +10,10 @@ import os
 # ✅ Setup Flask app to serve React build
 app = Flask(__name__, static_folder=os.path.join(os.path.dirname(__file__), '../client/build'), static_url_path='/')
 CORS(app)
+@app.route('/')
+def home():
+    return jsonify({"message": "MLGPT backend is running!"})
+
 
 # ✅ Serve React index.html
 @app.route('/', defaults={'path': ''})
