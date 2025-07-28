@@ -2,14 +2,22 @@ services:
   - type: web
     name: mlgpt-app
     env: python
-    buildCommand: "cd client && npm install && npm run build"
+
+    buildCommand: |
+      cd client && npm install && npm run build
+      cd .. && pip install --upgrade pip
+      pip install --prefer-binary -r requirements.txt
+
     startCommand: gunicorn app:app --bind 0.0.0.0:$PORT
+
     envVars:
       - key: PYTHON_VERSION
         value: 3.10
+
     buildFilter:
       paths:
         - backend/**
         - client/**
         - app.py
         - requirements.txt
+        - render.yaml
