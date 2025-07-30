@@ -1,8 +1,23 @@
+# Python
 __pycache__/
-.env
 *.pyc
-node_modules/
-build/
-dist/
-.DS_Store
+*.pyo
+*.pyd
+.env
+
+# VS Code
 .vscode/
+
+# Node
+client/node_modules/
+
+# React build (keep this included)
+# DON'T ignore client/build/
+# DO ignore if any other global build folder is present
+# build/   ← ❌ don't include this unless it's NOT client/build
+
+# Distribution folders
+dist/
+
+# macOS
+.DS_Store

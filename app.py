@@ -11,18 +11,22 @@ from sklearn.preprocessing import LabelEncoder
 import json
 import os
 
-# ✅ Initialize Flask and CORS
-app = Flask(__name__, static_folder="client/build", static_url_path='')
+# ✅ Serve frontend build folder from 'client/build'
+app = Flask(__name__, static_folder="client/build", static_url_path="")
 CORS(app)
 
-# ✅ Serve React index.html
+# ✅ Default route serves React frontend
 @app.route('/')
-def serve_react():
+def serve_index():
     return send_from_directory(app.static_folder, 'index.html')
 
+# ✅ Serve static files from React
 @app.route('/<path:path>')
-def serve_static_files(path):
-    return send_from_directory(app.static_folder, path)
+def serve_static(path):
+    if os.path.exists(os.path.join(app.static_folder, path)):
+        return send_from_directory(app.static_folder, path)
+    else:
+        return send_from_directory(app.static_folder, 'index.html')  # React handles unknown routes
 
 # ✅ ML Prediction Endpoint
 @app.route('/predict', methods=['POST'])
@@ -97,7 +101,7 @@ print("Accuracy:", accuracy)
     except Exception as e:
         return jsonify({'error': str(e)})
 
-# ✅ Chatbot endpoint
+# ✅ Chatbot Endpoint
 @app.route('/chat', methods=['POST'])
 def chat():
     try:
@@ -117,6 +121,6 @@ def chat():
     except Exception as e:
         return jsonify({"answer": "Oops! Something went wrong with the chatbot."})
 
-# ✅ Run server locally
+# ✅ Run app locally
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 5000)))
