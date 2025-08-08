@@ -13,6 +13,17 @@ import json
 import os
 
 # ✅ Setup Flask app to serve React build
+from flask import Flask, send_from_directory
+import os
+
+app = Flask(__name__, static_folder="client", static_url_path="/")
+
+@app.route("/")
+def serve():
+    return send_from_directory(app.static_folder, "index.html")
+
+# if you use APIs, make sure your API routes are defined above
+
 app = Flask(__name__, static_folder=os.path.join(os.path.dirname(__file__), '../client/build'), static_url_path='/')
 CORS(app)
 
