@@ -7,6 +7,8 @@ from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier, Gradien
 from sklearn.svm import SVC
 from sklearn.linear_model import LogisticRegression
 from sklearn.neighbors import KNeighborsClassifier
+from sklearn.naive_bayes import GaussianNB
+from sklearn.neural_network import MLPClassifier
 from sklearn.preprocessing import LabelEncoder
 import json
 import os
@@ -58,7 +60,9 @@ def predict():
             'logistic': LogisticRegression(),
             'knn': KNeighborsClassifier(),
             'adaboost': AdaBoostClassifier(),
-            'gradientboost': GradientBoostingClassifier()
+            'gradientboost': GradientBoostingClassifier(),
+            'naivebayes': GaussianNB(),
+            'mlp': MLPClassifier(max_iter=300)
         }
 
         if algorithm not in model_map:
