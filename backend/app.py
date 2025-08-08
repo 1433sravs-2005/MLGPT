@@ -2,8 +2,13 @@ from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 import pandas as pd
 from sklearn.model_selection import train_test_split
-from sklearn.tree import DecisionTreeClassifier
 from sklearn.preprocessing import LabelEncoder
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.svm import SVC
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.naive_bayes import GaussianNB
 import json
 import os
 
@@ -15,10 +20,8 @@ CORS(app)
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')
 def serve_react(path):
-    if path != "" and os.path.exists(os.path.join(app.static_folder, path)):
-        return send_from_directory(app.static_folder, path)
-    else:
-        return send_from_directory(app.static_folder, 'index.html')
+    file_path = os.path.join(app.static_folder, path)
+    return send_from_directory(app.static_folder, path if path and os.path.exists(file_path) else 'index.html')
 
 # ✅ ML Prediction Endpoint
 @app.route('/predict', methods=['POST'])
@@ -27,7 +30,7 @@ def predict():
         return jsonify({'error': 'No file uploaded'})
 
     uploaded_file = request.files['file']
-    algorithm = request.form.get('algorithm', 'decisiontree')
+    algorithm = request.form.get('algorithm', 'decisiontree').lower()
 
     try:
         df = pd.read_csv(uploaded_file)
@@ -35,7 +38,7 @@ def predict():
         if df.shape[1] < 2:
             return jsonify({'error': 'CSV must have at least 2 columns'})
 
-        # Encode categorical columns
+        # Label encode categorical columns
         for col in df.columns:
             if df[col].dtype == 'object':
                 le = LabelEncoder()
@@ -45,15 +48,29 @@ def predict():
         y = df.iloc[:, -1]
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-        model = DecisionTreeClassifier()
+        # ✅ Supported algorithms
+        algorithms = {
+            'decisiontree': DecisionTreeClassifier(),
+            'logisticregression': LogisticRegression(max_iter=1000),
+            'randomforest': RandomForestClassifier(),
+            'svm': SVC(),
+            'knn': KNeighborsClassifier(),
+            'naivebayes': GaussianNB()
+        }
+
+        if algorithm not in algorithms:
+            return jsonify({'error': f"Unsupported algorithm '{algorithm}'. Choose from: {', '.join(algorithms.keys())}"})
+
+        model = algorithms[algorithm]
         model.fit(X_train, y_train)
         accuracy = model.score(X_test, y_test)
 
+        # ✅ Python code to return
         code_snippet = f"""
 import pandas as pd
 from sklearn.model_selection import train_test_split
-from sklearn.tree import DecisionTreeClassifier
 from sklearn.preprocessing import LabelEncoder
+from sklearn.{model.__module__.split('.')[-2]} import {model.__class__.__name__}
 
 df = pd.read_csv("your_dataset.csv")
 
@@ -67,7 +84,7 @@ y = df.iloc[:, -1]
 
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-model = DecisionTreeClassifier()
+model = {model.__class__.__name__}()
 model.fit(X_train, y_train)
 
 accuracy = model.score(X_test, y_test)
@@ -89,7 +106,6 @@ def chat():
         data = request.get_json(force=True)
         question = data.get("question", "").lower()
 
-        # Load responses.json reliably
         responses_path = os.path.join(os.path.dirname(__file__), '../responses.json')
         with open(responses_path, "r") as f:
             responses = json.load(f)
